@@ -100,6 +100,8 @@ def create_bar_chart():
         os.makedirs('out')
     plt.savefig('out/bar_chart.png', bbox_inches='tight')
 
+    plt.subplots_adjust(left=0.15, right=0.95, top=0.85, bottom=0.15)
+
     plt.show()
 
 
@@ -154,6 +156,8 @@ def create_pie_chart():
     if not os.path.exists('out'):
         os.makedirs('out')
     plt.savefig('out/pie_chart.png', bbox_inches='tight')
+
+    fig.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
 
     # Display the pie chart
     plt.show()
