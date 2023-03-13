@@ -7,11 +7,13 @@ import csv
 
 downloads_by_version = {}
 
-
 def download_spacedock(url, filename):
-    if not os.path.exists('resources'):
-        os.makedirs('resources')
-    with urllib.request.urlopen(url) as response, open(filename, 'wb') as out_file:
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # get the script directory
+    resources_dir = os.path.join(script_dir, 'resources')  # construct the path to the resources directory
+    if not os.path.exists(resources_dir):
+        os.makedirs(resources_dir)
+    file_path = os.path.join(script_dir, filename)  # construct the path to the output file
+    with urllib.request.urlopen(url) as response, open(file_path, 'wb') as out_file:
         data = response.read()  # read the data from the response
         out_file.write(data)  # write the data to a local file
 
@@ -22,6 +24,8 @@ def download_github_releases(access_token, owner, repo, output_file):
     # get the repo
     repo = gh.get_repo(full_name_or_id=f"{owner}/{repo}")
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_file = os.path.join(script_dir, output_file)
     with open(output_file, mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['Date', 'Downloads', 'Mod Version'])
@@ -35,8 +39,10 @@ def download_github_releases(access_token, owner, repo, output_file):
 
 
 def find_total_downloads(csv_files):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     # Loop through each CSV file
     for file_name in csv_files:
+        file_name = os.path.join(script_dir, file_name)
         with open(file_name, "r") as file:
             # Read in the CSV file as a dictionary
             reader = csv.DictReader(file)
@@ -96,9 +102,10 @@ def create_bar_chart():
     plt.tight_layout()  # to prevent labels from getting clipped
 
     # Save the pie chart to a file in the out directory
-    if not os.path.exists('out'):
-        os.makedirs('out')
-    plt.savefig('out/bar_chart.png', bbox_inches='tight')
+    out_dir = os.path.join(os.path.dirname(__file__), 'out')
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    plt.savefig(os.path.join(out_dir, 'bar_chart.png'), bbox_inches='tight')
 
     plt.subplots_adjust(left=0.15, right=0.95, top=0.85, bottom=0.15)
 
@@ -153,9 +160,10 @@ def create_pie_chart():
     ax.axis('equal')
 
     # Save the pie chart to a file in the out directory
-    if not os.path.exists('out'):
-        os.makedirs('out')
-    plt.savefig('out/pie_chart.png', bbox_inches='tight')
+    out_dir = os.path.join(os.path.dirname(__file__), 'out')
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    plt.savefig(os.path.join(out_dir, 'pie_chart.png'), bbox_inches='tight')
 
     fig.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
 
@@ -184,8 +192,4 @@ def main(access_token):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('access_token', help='Your Github access token')
-    args = parser.parse_args()
-
-    main(args.access_token)
+    main("GITHUB API TOKEN")
