@@ -145,8 +145,7 @@ def create_pie_chart():
     significant_counts_sorted = [downloads_by_version[v] for v in significant_sorted]
 
     # Set the colors and font styles for the pie chart and text
-    pie_colors = ['#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#1f77b4', '#989fa3', '#e377c2', '#7f7f7f', '#bcbd22',
-                  '#17becf']
+    pie_colors = ['#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#1f77b4', '#989fa3', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
     text_color = '#FFFFFF'  # white
     font_size = 12
 
@@ -185,56 +184,6 @@ def create_pie_chart():
     fig.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
 
     # Display the pie chart
-    plt.show()
-
-
-def create_bar_chart_with_total():
-    # Set the style to dark mode
-    plt.style.use('dark_background')
-
-    # Get the version numbers and download counts as separate lists
-    versions = list(downloads_by_version.keys())
-    download_counts = list(downloads_by_version.values())
-
-    # Sort the version numbers in ascending order
-    versions_sorted = sorted(versions, key=lambda v: tuple(map(int, v.split('.'))))
-
-    # Sort the download counts to match the sorted version numbers
-    download_counts_sorted = [downloads_by_version[v] for v in versions_sorted]
-
-    # Set the colors and font styles for the bars and text
-    bar_color = '#1f77b4'  # blue
-    text_color = '#FFFFFF'  # white
-    font_size = 12
-
-    # Calculate the total number of downloads
-    total_downloads = sum(download_counts)
-
-    # Create a bar chart using Matplotlib
-    bar_width = 0.5  # Adjust this to increase/decrease the space between the bars
-    plt.bar(versions_sorted, download_counts_sorted, color=bar_color, width=bar_width)
-    plt.xlabel('Version', color=text_color, fontsize=font_size)
-    plt.ylabel('Downloads', color=text_color, fontsize=font_size)
-    plt.title(f'Total Downloads by Version\n{total_downloads:,} total downloads', color=text_color, fontsize=font_size)
-    plt.xticks(color=text_color, fontsize=font_size)
-    plt.yticks(color=text_color, fontsize=font_size)
-    plt.tight_layout()  # to prevent labels from getting clipped
-
-    # Add text to the chart to display the total downloads
-    text_x = len(versions) / 2  # Center the text horizontally
-    text_y = max(download_counts) / 2  # Center the text vertically
-    plt.text(text_x, text_y, f"{total_downloads:,}\nTotal Downloads", color=text_color, fontsize=font_size, ha='center',
-             va='center')
-
-    # Save the chart to a file in the out directory
-    out_dir = os.path.join(os.path.dirname(__file__), 'out')
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    plt.savefig(os.path.join(out_dir, 'bar_chart_with_total.png'), bbox_inches='tight')
-
-    plt.subplots_adjust(left=0.15, right=0.95, top=0.85, bottom=0.15)
-
-    # Display the chart
     plt.show()
 
 
