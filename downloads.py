@@ -1,11 +1,12 @@
-import argparse
+import csv
 import os
 import urllib.request
+
 import matplotlib.pyplot as plt
 import github
-import csv
 
 downloads_by_version = {}
+
 
 def download_spacedock(url, filename):
     script_dir = os.path.dirname(os.path.abspath(__file__))  # get the script directory
@@ -67,8 +68,12 @@ def find_total_downloads(csv_files):
 
 
 def print_total_downloads():
-    # Print out the total downloads by version and sort by version major.minor.patch
-    for version, downloads in downloads_by_version.items():
+    # Sort the version numbers in ascending order
+    versions_sorted = sorted(downloads_by_version.keys(), key=lambda v: tuple(map(int, v.split('.'))))
+
+    # Print out the total downloads by version, sorted by version major.minor.patch
+    for version in versions_sorted:
+        downloads = downloads_by_version[version]
         print(f"Version {version}: {downloads} downloads")
 
     # Print out the total downloads for all versions
@@ -84,21 +89,27 @@ def create_bar_chart():
     versions = list(downloads_by_version.keys())
     download_counts = list(downloads_by_version.values())
 
+    # Sort the version numbers in ascending order
+    versions_sorted = sorted(versions, key=lambda v: tuple(map(int, v.split('.'))))
+
+    # Sort the download counts to match the sorted version numbers
+    download_counts_sorted = [downloads_by_version[v] for v in versions_sorted]
+
     # Set the colors and font styles for the bars and text
     bar_color = '#1f77b4'  # blue
     text_color = '#FFFFFF'  # white
-    font_size = 12
+    font_size = 14
 
     # Calculate the total number of downloads
     total_downloads = sum(download_counts)
 
     # Create a bar chart using Matplotlib
-    plt.bar(versions, download_counts, color=bar_color)
+    plt.bar(versions_sorted, download_counts_sorted, color=bar_color)
     plt.xlabel('Version', color=text_color, fontsize=font_size)
     plt.ylabel('Downloads', color=text_color, fontsize=font_size)
     plt.title(f'Total Downloads by Version\n{total_downloads:,} total downloads', color=text_color, fontsize=font_size)
-    plt.xticks(color=text_color, fontsize=font_size)
-    plt.yticks(color=text_color, fontsize=font_size)
+    plt.xticks(color=text_color, fontsize=10)
+    plt.yticks(color=text_color, fontsize=12)
     plt.tight_layout()  # to prevent labels from getting clipped
 
     # Save the pie chart to a file in the out directory
@@ -127,24 +138,30 @@ def create_pie_chart():
     insignificant_count = sum([c for v, c in downloads_by_version.items() if c < threshold])
     total_count = sum(download_counts)
 
+    # Sort the significant version numbers in ascending order
+    significant_sorted = sorted(significant_versions, key=lambda v: tuple(map(int, v.split('.'))))
+
+    # Sort the significant download counts to match the sorted version numbers
+    significant_counts_sorted = [downloads_by_version[v] for v in significant_sorted]
+
     # Set the colors and font styles for the pie chart and text
-    pie_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    pie_colors = ['#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#1f77b4', '#989fa3', '#e377c2', '#7f7f7f', '#bcbd22',
+                  '#17becf']
     text_color = '#FFFFFF'  # white
     font_size = 12
 
     # Create a pie chart using Matplotlib
     fig, ax = plt.subplots()
     wedges, texts, autotexts = ax.pie(
-        significant_counts + [insignificant_count],
+        significant_counts_sorted + [insignificant_count],
         colors=pie_colors + ['#808080'],
-        labels=significant_versions + ['Others'],
+        labels=significant_sorted + ['Others'],
         autopct=lambda pct: f"{pct:.1f}%" if pct > 5 else '',
         textprops=dict(color=text_color, fontsize=font_size),
         wedgeprops=dict(width=0.5),
         pctdistance=0.8,
         startangle=90
     )
-
     # Set the font size for the percentages
     for autotext in autotexts:
         autotext.set_fontsize(font_size)
@@ -171,6 +188,56 @@ def create_pie_chart():
     plt.show()
 
 
+def create_bar_chart_with_total():
+    # Set the style to dark mode
+    plt.style.use('dark_background')
+
+    # Get the version numbers and download counts as separate lists
+    versions = list(downloads_by_version.keys())
+    download_counts = list(downloads_by_version.values())
+
+    # Sort the version numbers in ascending order
+    versions_sorted = sorted(versions, key=lambda v: tuple(map(int, v.split('.'))))
+
+    # Sort the download counts to match the sorted version numbers
+    download_counts_sorted = [downloads_by_version[v] for v in versions_sorted]
+
+    # Set the colors and font styles for the bars and text
+    bar_color = '#1f77b4'  # blue
+    text_color = '#FFFFFF'  # white
+    font_size = 12
+
+    # Calculate the total number of downloads
+    total_downloads = sum(download_counts)
+
+    # Create a bar chart using Matplotlib
+    bar_width = 0.5  # Adjust this to increase/decrease the space between the bars
+    plt.bar(versions_sorted, download_counts_sorted, color=bar_color, width=bar_width)
+    plt.xlabel('Version', color=text_color, fontsize=font_size)
+    plt.ylabel('Downloads', color=text_color, fontsize=font_size)
+    plt.title(f'Total Downloads by Version\n{total_downloads:,} total downloads', color=text_color, fontsize=font_size)
+    plt.xticks(color=text_color, fontsize=font_size)
+    plt.yticks(color=text_color, fontsize=font_size)
+    plt.tight_layout()  # to prevent labels from getting clipped
+
+    # Add text to the chart to display the total downloads
+    text_x = len(versions) / 2  # Center the text horizontally
+    text_y = max(download_counts) / 2  # Center the text vertically
+    plt.text(text_x, text_y, f"{total_downloads:,}\nTotal Downloads", color=text_color, fontsize=font_size, ha='center',
+             va='center')
+
+    # Save the chart to a file in the out directory
+    out_dir = os.path.join(os.path.dirname(__file__), 'out')
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    plt.savefig(os.path.join(out_dir, 'bar_chart_with_total.png'), bbox_inches='tight')
+
+    plt.subplots_adjust(left=0.15, right=0.95, top=0.85, bottom=0.15)
+
+    # Display the chart
+    plt.show()
+
+
 def main(access_token):
     download_spacedock(
         "https://spacedock.info/mod/3257/Space%20Warp/stats/downloads",
@@ -192,4 +259,4 @@ def main(access_token):
 
 
 if __name__ == '__main__':
-    main("GITHUB API TOKEN")
+    main("YOUR GITHUB ACCESS TOKEN HERE")
