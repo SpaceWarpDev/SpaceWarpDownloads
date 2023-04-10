@@ -1,9 +1,10 @@
 import csv
 import os
-import urllib.request
-
-import matplotlib.pyplot as plt
 import github
+import urllib.request
+import matplotlib.pyplot as plt
+from collections import defaultdict
+
 
 downloads_by_version = {}
 
@@ -81,38 +82,64 @@ def print_total_downloads():
     print(f"Total: {total_downloads:,} downloads")
 
 
+def group_versions(downloads_by_versions, insignificant_threshold=500):
+    minor_version_groups = defaultdict(int)
+    other_group = 0
+
+    for version, downloads in downloads_by_versions.items():
+        minor_version = ".".join(version.split('.')[:2])
+
+        if downloads < insignificant_threshold:
+            other_group += downloads
+        else:
+            minor_version_groups[minor_version] += downloads
+
+    return minor_version_groups, other_group
+
+
 def create_bar_chart():
+    # Group the minor versions and create an "Other" group for insignificant versions
+    minor_version_groups, other_group = group_versions(downloads_by_version)
+
+    # Sort the minor versions
+    sorted_minor_versions = sorted(minor_version_groups.keys(), key=lambda v: tuple(map(int, v.split('.'))))
+
+    # Get the download counts for the sorted minor versions
+    download_counts = [minor_version_groups[v] for v in sorted_minor_versions]
+
     # Set the style to dark mode
     plt.style.use('dark_background')
 
-    # Get the version numbers and download counts as separate lists
-    versions = list(downloads_by_version.keys())
-    download_counts = list(downloads_by_version.values())
-
-    # Sort the version numbers in ascending order
-    versions_sorted = sorted(versions, key=lambda v: tuple(map(int, v.split('.'))))
-
-    # Sort the download counts to match the sorted version numbers
-    download_counts_sorted = [downloads_by_version[v] for v in versions_sorted]
-
     # Set the colors and font styles for the bars and text
-    bar_color = '#1f77b4'  # blue
     text_color = '#FFFFFF'  # white
     font_size = 14
 
     # Calculate the total number of downloads
-    total_downloads = sum(download_counts)
+    total_downloads = sum(download_counts) + other_group
 
     # Create a bar chart using Matplotlib
-    plt.bar(versions_sorted, download_counts_sorted, color=bar_color)
-    plt.xlabel('Version', color=text_color, fontsize=font_size)
+    bars = plt.bar(sorted_minor_versions + ['Other'], download_counts + [other_group], color='#1f77b4')
+    plt.xlabel('Minor Version', color=text_color, fontsize=font_size)
     plt.ylabel('Downloads', color=text_color, fontsize=font_size)
-    plt.title(f'Total Downloads by Version\n{total_downloads:,} total downloads', color=text_color, fontsize=font_size)
+    plt.title(f'Total Downloads by Minor Version\n{total_downloads:,} total downloads', color=text_color,
+              fontsize=font_size)
+
+    # Set gridlines for the x-axis only
+    plt.grid(True, which='both', axis='y', linestyle='--', alpha=0.25)
+
+    # Set axis tick colors and sizes
     plt.xticks(color=text_color, fontsize=10)
     plt.yticks(color=text_color, fontsize=12)
+
+    # Write the total downloads by version vertically inside each bar
+    for bar in bars:
+        height = bar.get_height()
+        plt.gca().text(bar.get_x() + bar.get_width() / 2, height * 0.5, f'{int(height):,}', ha='center', va='center',
+                       color='white', fontsize=10)
+
     plt.tight_layout()  # to prevent labels from getting clipped
 
-    # Save the pie chart to a file in the out directory
+    # Save the bar chart to a file in the out directory
     out_dir = os.path.join(os.path.dirname(__file__), 'out')
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -145,7 +172,8 @@ def create_pie_chart():
     significant_counts_sorted = [downloads_by_version[v] for v in significant_sorted]
 
     # Set the colors and font styles for the pie chart and text
-    pie_colors = ['#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#1f77b4', '#989fa3', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    pie_colors = ['#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#1f77b4', '#989fa3', '#e377c2', '#7f7f7f', '#bcbd22',
+                  '#17becf']
     text_color = '#FFFFFF'  # white
     font_size = 12
 
@@ -208,4 +236,5 @@ def main(access_token):
 
 
 if __name__ == '__main__':
-    main("YOUR GITHUB ACCESS TOKEN HERE")
+    main("YOUR_GITHUB_ACCESS_TOKEN_HERE")
+
